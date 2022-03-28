@@ -450,7 +450,6 @@ export const Mito = (props: MitoProps): JSX.Element => {
                     setUIState={setUIState}
                     mitoAPI={props.mitoAPI}
                     sheetDataArray={sheetDataArray}
-                    analysisData={analysisData}
                 />
             )
             case TaskpaneType.GRAPH:
@@ -486,7 +485,6 @@ export const Mito = (props: MitoProps): JSX.Element => {
                     sheetDataArray={sheetDataArray}
                     setUIState={setUIState}
                     mitoAPI={props.mitoAPI}
-                    analysisData={analysisData}
                 />
             )
             case TaskpaneType.CONCAT: return (

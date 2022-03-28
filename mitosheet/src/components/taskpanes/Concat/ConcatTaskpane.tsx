@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import MitoAPI from "../../../api";
 import useSyncedParams from "../../../hooks/useSyncedParams";
-import { AnalysisData, ConcatParams, SheetData, StepType, UIState } from "../../../types"
+import { AnalysisData, ConcatParams, SheetData, UIState } from "../../../types"
 import DropdownButton from "../../elements/DropdownButton";
 import DropdownItem from "../../elements/DropdownItem";
 import Select from "../../elements/Select";
@@ -29,26 +29,25 @@ interface ConcatTaskpaneProps {
 */
 const ConcatTaskpane = (props: ConcatTaskpaneProps): JSX.Element => {
 
-    const {params, setParams} = useSyncedParams<ConcatParams>(
+    const [concatParams, setConcatParams] = useSyncedParams<ConcatParams>(
         {
             join: 'inner',
             ignore_index: true,
             sheet_indexes: []
         },
-        StepType.Concat, 
+        'concat', 'concat_edit', 
         props.mitoAPI,
-        props.analysisData,
-        50 // 50 ms debounce delay
+        props.analysisData
     )
 
     // Make sure the user cannot select the newly created dataframe
     const [selectableSheetIndexes] = useState(props.sheetDataArray.map((sd, index) => index));
 
-    if (params === undefined) {
+    if (props.sheetDataArray.length < 2) {
         return (<DefaultEmptyTaskpane setUIState={props.setUIState} message="Import at least two datasets before concating."/>)
     }
 
-    const dataframeCards: JSX.Element[] = params.sheet_indexes.map((sheetIndex, arrIndex) => {
+    const dataframeCards: JSX.Element[] = concatParams.sheet_indexes.map((sheetIndex, arrIndex) => {
         return (
             <SelectAndXIconCard 
                 key={arrIndex}
@@ -58,7 +57,7 @@ const ConcatTaskpane = (props: ConcatTaskpaneProps): JSX.Element => {
                 value={sheetIndex + ''}
                 onChange={(newSheetIndexStr) => {
                     const newSheetIndex = parseInt(newSheetIndexStr);
-                    setParams(prevConcatParams => {
+                    setConcatParams(prevConcatParams => {
                         const newSheetIndexes = [...prevConcatParams.sheet_indexes];
                         newSheetIndexes[arrIndex] = newSheetIndex;
 
@@ -69,7 +68,7 @@ const ConcatTaskpane = (props: ConcatTaskpaneProps): JSX.Element => {
                     })
                 }}
                 onDelete={() => {
-                    setParams(prevConcatParams => {
+                    setConcatParams(prevConcatParams => {
                         const newSheetIndexes = [...prevConcatParams.sheet_indexes];
                         newSheetIndexes.splice(arrIndex, 1);
 
@@ -100,9 +99,9 @@ const ConcatTaskpane = (props: ConcatTaskpaneProps): JSX.Element => {
                     </Col>
                     <Col>
                         <Select 
-                            value={params.join}
+                            value={concatParams.join}
                             onChange={(newJoin: string) => {
-                                setParams(prevConcatParams => {
+                                setConcatParams(prevConcatParams => {
                                     return {
                                         ...prevConcatParams,
                                         join: newJoin as 'inner' | 'outer'
@@ -130,9 +129,9 @@ const ConcatTaskpane = (props: ConcatTaskpaneProps): JSX.Element => {
                     </Col>
                     <Col>
                         <Toggle 
-                            value={params.ignore_index}
+                            value={concatParams.ignore_index}
                             onChange={() => {
-                                setParams(prevConcatParams => {
+                                setConcatParams(prevConcatParams => {
                                     return {
                                         ...prevConcatParams,
                                         ignore_index: !prevConcatParams.ignore_index
@@ -160,8 +159,8 @@ const ConcatTaskpane = (props: ConcatTaskpaneProps): JSX.Element => {
                                     key={-1}
                                     title="Add all sheets"
                                     onClick={() => {
-                                        setParams(prevConcatParams => {
-                                            const newSheetIndexes = [...selectableSheetIndexes];;
+                                        setConcatParams(prevConcatParams => {
+                                            const newSheetIndexes = [...selectableSheetIndexes];
                     
                                             return {
                                                 ...prevConcatParams,
@@ -181,7 +180,7 @@ const ConcatTaskpane = (props: ConcatTaskpaneProps): JSX.Element => {
                                         key={index}
                                         title={sheetData.dfName}
                                         onClick={() => {
-                                            setParams(prevConcatParams => {
+                                            setConcatParams(prevConcatParams => {
                                                 const newSheetIndexes = [...prevConcatParams.sheet_indexes];
                                                 newSheetIndexes.push(index);
                         

@@ -73,6 +73,10 @@ class GraphStepPerformer(StepPerformer):
         return "Created a graph"
 
     @classmethod
+    def step_event_type(cls) -> str:
+        return "graph_edit"
+
+    @classmethod
     def saturate(cls, prev_state: State, params: Dict[str, Any]) -> Dict[str, Any]:
         return params
 

@@ -1,22 +1,22 @@
 // Copyright (c) Mito
 
-import { ColumnID, SheetData } from '../../../types';
+import { ColumnID, ColumnIDsMap } from '../../../types';
 import { getDisplayColumnHeader } from '../../../utils/columnHeaders';
 
 
 type SuggestedKeys = {
-    merge_key_column_id_one: ColumnID,
-    merge_key_column_id_two: ColumnID
+    mergeKeyColumnIDOne: ColumnID,
+    mergeKeyColumnIDTwo: ColumnID
 }
 
 /*
     Given two sheet indexes, reccomends a key to merge on,
     based on which column headers are displayed the same
 */
-export const getSuggestedKeysColumnID = (sheetDataArray: SheetData[], sheetOneIndex: number, sheetTwoIndex: number): SuggestedKeys | undefined => {
+export const getSuggestedKeysColumnID = (columnIDsMapArray: ColumnIDsMap[], sheetOneIndex: number, sheetTwoIndex: number): SuggestedKeys => {
     
-    const sheetOneEntries = Object.entries(sheetDataArray[sheetOneIndex]?.columnIDsMap || {});
-    const sheetTwoEntries = Object.entries(sheetDataArray[sheetTwoIndex]?.columnIDsMap || {});
+    const sheetOneEntries = Object.entries(columnIDsMapArray[sheetOneIndex]);
+    const sheetTwoEntries = Object.entries(columnIDsMapArray[sheetTwoIndex]);
     let columnIDsWithSharedColumnHeaders: ([string, string] | undefined)[] = sheetOneEntries.map(([columnID, columnHeader]) => {
         const matchingIndex = sheetTwoEntries.findIndex(([, otherColumnHeader]) => {return getDisplayColumnHeader(columnHeader) === getDisplayColumnHeader(otherColumnHeader)});
         if (matchingIndex > -1) {
@@ -30,16 +30,12 @@ export const getSuggestedKeysColumnID = (sheetDataArray: SheetData[], sheetOneIn
     
     // Make sure everything is defined; handles if there are no columns in a sheet
     const columnIDOne = columnIDsWithSharedColumnHeaders[0] ? columnIDsWithSharedColumnHeaders[0][0] : 
-        (sheetOneEntries[0] ? sheetOneEntries[0][0] : undefined);
+        (sheetOneEntries[0] ? sheetOneEntries[0][0] : '');
     const columnIDTwo = columnIDsWithSharedColumnHeaders[0] ? columnIDsWithSharedColumnHeaders[0][1] :
-        (sheetTwoEntries[0] ? sheetTwoEntries[0][0] : undefined);
-
-    if (columnIDOne === undefined || columnIDTwo === undefined) {
-        return undefined;
-    }
+        (sheetTwoEntries[0] ? sheetTwoEntries[0][0] : '');
     
     return {
-        merge_key_column_id_one: columnIDOne,
-        merge_key_column_id_two: columnIDTwo
+        mergeKeyColumnIDOne: columnIDOne,
+        mergeKeyColumnIDTwo: columnIDTwo
     }
 }
