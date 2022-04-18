@@ -29,12 +29,41 @@ VALID_DATAFRAMES = [
     (pd.DataFrame(data={'NUMber': [1, 2, 3], '.,,': [1, 2, 3]})),
     (pd.DataFrame(data={'this is a possible ! column header that could be there': [1, 2, 3], '.,,': [1, 2, 3]})),
     (pd.DataFrame(data={1000.123123: [1, 2, 3], 52.100: [1, 2, 3]})),
+    (pd.DataFrame({pd.to_datetime('12-12-2020'): [123]})),
 ]
 @pytest.mark.parametrize("df", VALID_DATAFRAMES)
 def test_sheet_creates_valid_dataframe(df):
+    print(df)
     mito = sheet(df)
     assert mito is not None
     assert list(mito.steps_manager.curr_step.dfs[0].keys()) == list(df.keys())
+
+
+def test_sheet_creats_valid_dataframe_with_datetime_headers():
+    import pandas as pd
+    import numpy as np
+    import mitosheet
+    zz = np.random.rand(10000,10000)
+
+    def create_header():
+        names = []
+        for i in range(10000):
+            names.append(f'Path_{i}')
+        
+        return names
+
+    col_head = create_header()
+
+    infer_datetime_format=True
+    z = pd.date_range(start='18/12/1994', end='05/04/2022') 
+
+    df = pd.DataFrame(zz, columns = col_head)
+    df.insert(loc=0, column='Date', value = z)
+    df.set_index('Date', inplace= True)
+    df1 = df.T
+    df1.head(5)
+
+    mitosheet.sheet(df1, view_df=True)
 
 
 def test_create_with_multiple_dataframes():
