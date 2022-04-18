@@ -184,32 +184,43 @@ def df_to_json_dumpsable(
         # as to preserve the formatting of NaN values. 
         df[column_header] = df[column_header].apply(lambda x: x if np.isnan(x) else str(x))
 
-    # Then, build the final sheet data
+    json_obj = json.loads(df.to_json(orient="split"))
+    # Then, we go through and find all the null values (which are infinities),
+    # and set them to 'NaN' for display in the frontend.
+    for d in json_obj['data']:
+        for idx, e in enumerate(d):
+            if e is None:
+                d[idx] = 'NaN'
+
     final_data = []
+
+    # NOTE: We rebuilds the maps so they are in the correct order, so things are easy on the
+    # front-end and we don't have to worry about sorting the column headers
     column_dtype_map = {}
-
-    # NOTE: We rebuild the maps so they are in the correct order, so things are easy on the
-    # front-end and we don't have to worry about sorting
     column_ids_map = {}
-    for column_header in df.keys():
-        column_id = column_headers_to_column_ids[column_header]
 
-        # We cannot json serialize timestamps, so we turn them into a string
-        if isinstance(column_header, pd.Timestamp):
-            column_header = str(column_header)
+    for column_index, json_column_header in enumerate(json_obj['columns']):
+        original_column_header = df.columns[column_index]
+
+        if isinstance(original_column_header, pd.Timestamp):
+            column_header_for_serialization = str(original_column_header)
+        else:
+            column_header_for_serialization = json_column_header
+
+        column_id = column_headers_to_column_ids[original_column_header]
 
         column_final_data = {
             'columnID': column_id,
-            'columnHeader': column_header,
-            'columnDtype': str(original_df[column_header].dtype),
-            # Get the column data (turning NaNs to NaN text), and then put the 
-            # values in a list so that we can serialize them
-            'columnData': list(map(str, df[column_header].fillna('NaN').values))
+            'columnHeader': column_header_for_serialization,
+            'columnDtype': str(original_df[original_column_header].dtype),
+            'columnData': []
         }
-        print(column_final_data)
-        column_dtype_map[column_id] = str(original_df[column_header].dtype)
-        column_dtype_map[column_id] = column_header
+        for row in json_obj['data']:
+            column_final_data['columnData'].append(row[column_index])
+        
         final_data.append(column_final_data)     
+        column_dtype_map[column_id] = str(original_df[original_column_header].dtype)
+        column_ids_map[column_id] = column_header_for_serialization
     
     return {
         "dfName": df_name,
@@ -221,7 +232,7 @@ def df_to_json_dumpsable(
         'columnSpreadsheetCodeMap': column_spreadsheet_code,
         'columnFiltersMap': column_filters,
         'columnDtypeMap': column_dtype_map,
-        'index': df.index.tolist(),
+        'index': json_obj['index'],
         'columnFormatTypeObjMap': column_format_types
     }
 
