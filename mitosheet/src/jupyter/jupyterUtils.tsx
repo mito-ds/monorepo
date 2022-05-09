@@ -21,11 +21,14 @@ import { notebookGetArgs, notebookOverwriteAnalysisToReplayToMitosheetCall, note
 
 
 export const isInJupyterLab = (): boolean => {
-    return window.location.pathname.startsWith('/lab')
+    return window.location.pathname.startsWith('/lab') ||
+        window.commands !== undefined ||
+        (window as any)._JUPYTERLAB !== undefined
 }
 
 export const isInJupyterNotebook = (): boolean => {
-    return window.location.pathname.startsWith('/notebooks')
+    return window.location.pathname.startsWith('/notebooks') ||
+        (window as any).Jupyter !== undefined
 }
 
 export const writeAnalysisToReplayToMitosheetCall = (analysisName: string, mitoAPI: MitoAPI): void => {
@@ -36,6 +39,8 @@ export const writeAnalysisToReplayToMitosheetCall = (analysisName: string, mitoA
         });
     } else if (isInJupyterNotebook()) {
         notebookWriteAnalysisToReplayToMitosheetCall(analysisName, mitoAPI);
+    } else {
+        console.error("Not detected as in Jupyter Notebook or JupyterLab")
     }
 }
 export const overwriteAnalysisToReplayToMitosheetCall = (oldAnalysisName: string, newAnalysisName: string, mitoAPI: MitoAPI): void => {
@@ -47,6 +52,8 @@ export const overwriteAnalysisToReplayToMitosheetCall = (oldAnalysisName: string
         });
     } else if (isInJupyterNotebook()) {
         notebookOverwriteAnalysisToReplayToMitosheetCall(oldAnalysisName, newAnalysisName, mitoAPI);
+    } else {
+        console.error("Not detected as in Jupyter Notebook or JupyterLab")
     }
 }
 
@@ -60,6 +67,8 @@ export const writeGeneratedCodeToCell = (analysisName: string, code: string[], t
         });
     } else if (isInJupyterNotebook()) {
         notebookWriteGeneratedCodeToCell(analysisName, code, telemetryEnabled);
+    } else {
+        console.error("Not detected as in Jupyter Notebook or JupyterLab")
     }
 }
 
@@ -73,6 +82,8 @@ export const getArgs = (analysisToReplayName: string | undefined): Promise<strin
             return;
         } else if (isInJupyterNotebook()) {
             return resolve(notebookGetArgs(analysisToReplayName));
+        } else {
+            console.error("Not detected as in Jupyter Notebook or JupyterLab")
         }
         return resolve([]);
     })
